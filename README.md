@@ -5,7 +5,7 @@
   <h4 align="center">
       If you would like to report an issue or request a feature. Join our <a href="https://discord.gg/JU84wfY">Discord</a> or create an issue.
   </h4>
-  <h5> align="center">
+  <h5 align="center">
     If you wish to use the updated version of this, head to our Cloud Panel <a href="http://fivempanel.com">Here</a>.
   </h5>
 </p>
