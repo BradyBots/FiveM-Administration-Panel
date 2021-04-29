@@ -307,6 +307,9 @@
 										<th>
 											Expires
 										</th>
+										<th style="text-align: center; vertical-align: middle;">
+											Status
+										</th>
 										<th>
 											
 										</th>
@@ -318,7 +321,7 @@
 										if(empty($bans)) {
 											echo '
 												<tr>
-													<td colspan="5">
+													<td colspan="6">
 														<center>
 															No Bans on Record
 														</center>
@@ -331,6 +334,15 @@
 													$banned_until = "Permanent";
 												} else {
 													$banned_until = date("m/d/Y h:i A", $ban['banned_until']);
+												}
+												$banstatus = "<span title=\"Active\" style=\"color: green;\"><i class=\"fas fa-check\"></i></span>";
+												if ($ban['unbanned'] == 1) {
+													$banned_until = $banned_until . " (Unbanned by " . $ban['staff_unban_name'] . ")";
+													$banstatus = "<span title=\"Reason: " . $ban['unban_reason'] . "\"style=\"color: red;\"><i class=\"fas fa-times\"></i></span>";
+												}
+												elseif ($banned_until != "Permanent" && $banned_until <= date("m/d/Y h:i A", time())){
+													$banned_until = $banned_until . " (Expired)";
+													$banstatus = "<span title=\"Expired\"style=\"color: orange;\"><i class=\"far fa-clock\"></i></span>";
 												}
 												echo '
 													<tr>
@@ -346,18 +358,43 @@
 														<td>
 															' . $banned_until . '
 														</td>
+														<td style="text-align: center; vertical-align: middle;">
+															' . $banstatus . '
+														</td>
 												';
+													echo '<td>';
+													if($ban['unbanned'] == 0 && ($banned_until == "Permanent" ||$banned_until > date("m/d/Y h:i A", time())) && hasPermission($_SESSION['steamid'], 'unban')) {
+														echo '
+														<form action="'.$GLOBALS['domainname'].'api/unban" method="post" onsubmit="return submitForm($(this));">
+															<input type="hidden" name="name" value="'.$ban['name'].'" />
+															<input type="hidden" name="banid" value="'.$ban['ID'].'" />
+															<input type="hidden" id="reason" name="reason" value="NO REASON SPECIFIED" />
+															<input type="submit" id="unban-ban-'.$ban['ID'].'" style="display: none;" />
+															<span class="label label-success" onclick=\'
+															var reason = prompt("Enter Reason For Unbanning " + "' . $ban['name'] .'", "");
+															if (reason == null) {
+																return;
+															}
+															if (reason == "") {
+																alert("You did not enter a reason!  Aborting unban!");
+																return;
+															}
+															$("#reason").val(reason);
+															$("#unban-ban-'.$ban['ID'].'").click();\' style="cursor: pointer;">Unban</span>
+														</form>
+														';
+													}
 													if(hasPermission($_SESSION['steamid'], 'delrecord')) {
 														echo '
 														<form action="'.$GLOBALS['domainname'].'api/delban" method="post" onsubmit="return submitForm($(this));">
 															<input type="hidden" name="banid" value="'.$ban['ID'].'" />
 															<input type="submit" id="remove-ban-'.$ban['ID'].'" style="display: none;" />
-															<td class="table-remove-button"><span class="label label-danger" onclick=\'$("#remove-ban-'.$ban['ID'].'").click();\' style="cursor: pointer;">Remove</span></td>
+															<span class="label label-danger" onclick=\'$("#remove-ban-'.$ban['ID'].'").click();\' style="cursor: pointer;">Remove</span>
 														</form>
 														';
-													} else {
-														echo '<td></td>';
 													}
+													
+													echo '</td>';
 												echo '
 													</tr>
 												';

@@ -235,7 +235,7 @@ $klein->respond('*', function ($request, $response, $service) {
 
         foreach (dbquery('SELECT * FROM warnings WHERE license="' . $license . '"') as $warn) {$ts = $ts - siteConfig('tswarn');}
         foreach (dbquery('SELECT * FROM kicks WHERE license="' . $license . '"') as $kick) {$ts = $ts - siteConfig('tskick');}
-        foreach (dbquery('SELECT * FROM bans WHERE identifier="' . $license . '"') as $ban) {$ts = $ts - siteConfig('tsban');}
+        foreach (dbquery('SELECT * FROM bans WHERE identifier="' . $license . '" AND unbanned=0') as $ban) {$ts = $ts - siteConfig('tsban');}
         foreach (dbquery('SELECT * FROM commend WHERE license="' . $license . '"') as $commend) {$ts = $ts + siteConfig('tscommend');}
 
         if ($ts > 100) {
@@ -705,9 +705,31 @@ $klein->respond('GET', '/api/[staff|players|playerslist|warnslist|kickslist|bans
                     'formatter' => function ($d, $row) {
                         if($d == 0) {
                             return "Permanent";
-                        } else {
-                            return date("m/d/Y h:i A", $d);
                         }
+						if (date("m/d/Y h:i A", $d) <=  date("m/d/Y h:i A", time())) {
+							return (date("m/d/Y h:i A", $d) . " (Expired)");
+						}
+						return date("m/d/Y h:i A", $d);
+                    },
+                ),
+				array(
+                    'db' => 'unbanned',
+                    'dt' => 5,
+                    'formatter' => function ($d, $row) {
+                        if($d == 1) {
+                            return  "<span title=\"UNBANNED\"style=\"color: red;\"><i class=\"fas fa-times\"></i></span>";
+                        }				
+						/* I know this is an absolute dogshit way to do this, but datatables has been a giant pain in the ass and I don't care enough atm.
+						 * Because PHP is a piece of steaming garbage, and does not support accessing arrays via keys, and for some reason, for_each doesn't correctly work,
+						 * I have decided to go with the magic number of 4.  I hope to god this doesn't change.  
+						*/
+						$expiry = $row[4];
+
+						  if ($expiry != 0 && date("m/d/Y h:i A", $expiry) <=  date("m/d/Y h:i A", time())) {
+							  return "<span title=\"EXPIRED\"style=\"color: orange;\"><i class=\"far fa-clock\"></i></span>";
+						  }
+                           return "<span title=\"ACTIVE\" style=\"color: green;text-align: center;\"><i class=\"fas fa-check\"></i></span>";
+                        
                     },
                 ),
                 array('db' => 'identifier', 'dt' => -1),
@@ -774,7 +796,7 @@ $klein->respond('GET', '/api/[staff|players|playerslist|warnslist|kickslist|bans
             if ($request->param('license') == null) {
                 echo json_encode(array("response" => "400", "message" => "Missing Player Identifier"));
             } else {
-                $bans = dbquery('SELECT reason, ban_issued, banned_until, staff_name FROM bans WHERE identifier="' . escapestring($request->param('license')) . '" AND (banned_until >= ' . time() . ' OR banned_until = 0)');
+                $bans = dbquery('SELECT reason, ban_issued, banned_until, staff_name, unbanned FROM bans WHERE identifier="' . escapestring($request->param('license')) . '" AND (banned_until >= ' . time() . ' OR banned_until = 0) AND unbanned = 0');
                 if (!empty($bans)) {
                     if ($bans[0]['banned_until'] == 0) {
                         $banned_until = "Permanent";
@@ -1075,7 +1097,7 @@ $klein->respond('POST', '/api/button/[restart|kickforstaff|command:action]', fun
     }
 });
 
-$klein->respond('POST', '/api/[warn|kick|ban|commend|addserver|updatepanel|delserver|addstaff|delstaff|delwarn|delcommend|delkick|delban:action]', function ($request, $response, $service) {
+$klein->respond('POST', '/api/[warn|kick|ban|commend|addserver|updatepanel|delserver|addstaff|delstaff|delwarn|delcommend|delkick|unban|delban:action]', function ($request, $response, $service) {
     header('Content-Type: application/json');
     if (isset($_SESSION['steamid'])) {
         if (getRank($_SESSION['steamid']) != "user") {
@@ -1277,6 +1299,15 @@ $klein->respond('POST', '/api/[warn|kick|ban|commend|addserver|updatepanel|delse
                         exit();
                     }
                     dbquery('DELETE FROM kicks WHERE ID="' . escapestring($request->param('kickid')) . '"', false);
+                    echo json_encode(array('success' => true, 'reload' => true));
+                    break;
+				case "unban":
+                    if (!hasPermission($_SESSION['steamid'], 'unban')) {
+                        echo json_encode(array('message' => 'You do not have permission to unban an individual!'));
+                        exit();
+                    }
+                    dbquery('UPDATE bans SET unbanned= 1, staff_unban_name="'. $_SESSION['steam_personaname'] . '", staff_unban_steamid="'. $_SESSION['steamid'] . '", unban_reason="'. $request->param('reason') . '" WHERE ID="' . escapestring($request->param('banid')) . '" AND unbanned= 0', false);
+					discordMessage('Player Unbanned', '**Player: **' . $request->param('name') . '\r\n**Unbanned By: **' . $_SESSION['steam_personaname'] . '\r\n**Unban Reason: **' .  $request->param('reason'));
                     echo json_encode(array('success' => true, 'reload' => true));
                     break;
                 case "delban":

@@ -31,25 +31,27 @@
               <h4 class="title">Bans List</h4>
             </div>
             <div class="content table-responsive">
-                <table id="players" class="table table-hover table-striped table-bordered" style="width:100%;cursor:pointer;">
+                <table id="players" class="table table-hover table-striped table-bordered" style="width:100%;cursor:pointer;text-align:center">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Reason</th>
-                            <th>Staff Member</th>
-                            <th>Ban Issued</th>
-                            <th>Banned Until</th>
+                            <th style="text-align: center;">Name</th>
+                            <th style="text-align: center;">Reason</th>
+                            <th style="text-align: center;">Staff Member</th>
+                            <th style="text-align: center;">Ban Issued</th>
+                            <th style="text-align: center;">Banned Until</th>
+							<th style="text-align: center;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th>Name</th>
-                            <th>Reason</th>
-                            <th>Staff Member</th>
-                            <th>Ban Issued</th>
-                            <th>Banned Until</th>
+                            <th style="text-align: center;">Name</th>
+                            <th style="text-align: center;">Reason</th>
+                            <th style="text-align: center;">Staff Member</th>
+                            <th style="text-align: center;">Ban Issued</th>
+                            <th style="text-align: center;">Banned Until</th>
+							<th style="text-align: center;">Status</th>
                         </tr>
                     </tfoot>
                 </table>

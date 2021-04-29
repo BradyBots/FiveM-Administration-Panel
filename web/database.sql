@@ -36,9 +36,12 @@ CREATE TABLE `bans` (
   `ban_issued` varchar(1024) NOT NULL,
   `banned_until` varchar(1024) NOT NULL,
   `staff_name` varchar(1024) NOT NULL,
-  `staff_steamid` varchar(1024) NOT NULL
+  `staff_steamid` varchar(1024) NOT NULL,
+  `unbanned` TINYINT(1) NOT NULL DEFAULT '0',
+  `unban_reason` VARCHAR(1024) NOT NULL DEFAULT '' COLLATE 'latin1_swedish_ci',
+  `staff_unban_name` VARCHAR(1024) NOT NULL DEFAULT '' COLLATE 'latin1_swedish_ci',
+  `staff_unban_steamid` VARCHAR(1024) NOT NULL DEFAULT '' COLLATE 'latin1_swedish_ci',
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
 -- --------------------------------------------------------
 
 --
